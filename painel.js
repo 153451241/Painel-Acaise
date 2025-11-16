@@ -1,49 +1,35 @@
 /*
   ==========================================================
-  PAINEL.JS (VERSÃO PUSHER/WORKER - FINAL)
-  - Sem Firebase (usa Pusher para receber pedidos em tempo real)
-  - Sem histórico/PDF (apenas sessão atual)
-  - Impressão automática
+  PAINEL.JS (AÇAÍSE - VERSÃO FINAL)
   ==========================================================
 */
 
-// ==========================================================
-// 1. CONFIGURAÇÃO DA "CAMPAINHA" (PUSHER)
-// ==========================================================
-const PUSHER_KEY = "e79d1140ca7a4250c29d"; // Sua chave pública
-const PUSHER_CLUSTER = "sa1"; // Seu cluster (São Paulo)
+// 1. CONFIGURAÇÃO PUSHER
+const PUSHER_KEY = "e79d1140ca7a4250c29d";
+const PUSHER_CLUSTER = "sa1";
 
-// ==========================================================
-// 2. ESTADO GLOBAL DO PAINEL
-// ==========================================================
-let todosPedidosDoDia = []; // Lista temporária (reseta ao atualizar a página)
-let filtroAtual = "NOVOS";  // Filtro padrão inicial
+// 2. ESTADO GLOBAL
+let todosPedidosDoDia = [];
+let filtroAtual = "NOVOS";
 
-// Configuração de Áudio
+// Configuração de Áudio (Crie a pasta 'sounds' e coloque um arquivo 'toque.mp3')
 const audioAlarme = new Audio("sounds/toque.mp3");
 audioAlarme.volume = 1.0;
 audioAlarme.loop = true;
 let alarmeTocando = false;
 
-// ==========================================================
 // 3. FUNÇÕES AUXILIARES
-// ==========================================================
 const brl = (n) => `R$ ${Number(n).toFixed(2).replace(".", ",")}`;
 
 function formatarHora(dataISO) {
   try {
-    return new Date(dataISO).toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch (e) {
-    return "--:--";
-  }
+    return new Date(dataISO).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  } catch (e) { return "--:--"; }
 }
 
 function iniciarAlarme() {
   if (!alarmeTocando) {
-    audioAlarme.play().catch(() => console.warn("Alarme bloqueado pelo navegador (necessário interação)."));
+    audioAlarme.play().catch(e => console.warn("Som bloqueado até interação do usuário."));
     alarmeTocando = true;
   }
 }
@@ -56,9 +42,7 @@ function pararAlarme() {
   }
 }
 
-// ==========================================================
-// 4. FUNÇÃO DE IMPRESSÃO (Formatada para 80mm)
-// ==========================================================
+// 4. IMPRESSÃO TÉRMICA (80mm)
 function imprimirComanda(pedido) {
   const loja = document.getElementById("comanda-loja");
   const lista = document.getElementById("comanda-lista");
@@ -69,73 +53,56 @@ function imprimirComanda(pedido) {
   const pagamento = document.getElementById("comanda-pagamento");
   const obsPagamento = document.getElementById("comanda-obs-pagamento");
 
-  if (!loja || !lista || !total) return;
+  if (!loja || !lista) return;
 
-  // ⚠️ MUDE O NOME DA NOVA LOJA AQUI
-  loja.textContent = `NOVA LOJA - Pedido #${pedido.codigo}`;
+  // ✅ NOME DA LOJA CORRIGIDO
+  loja.textContent = `AÇAÍSE - #${pedido.codigo}`;
 
   lista.innerHTML = "";
   pedido.itens.forEach((it) => {
     const li = document.createElement("li");
-    // Como não temos a função formatarItemAcai aqui, usamos o nome direto.
-    // Se precisar da formatação complexa, podemos trazer ela pra cá também.
-    let nomeHtml = `<b>${it.name}</b>`; 
-    if (it.obs) {
-      nomeHtml += ` <br><i>(Obs: ${it.obs})</i>`;
-    }
-    li.innerHTML = `${nomeHtml} <span>${brl(it.price)}</span>`;
+    li.style.marginBottom = "5px";
+    li.style.borderBottom = "1px dotted #ccc";
+    
+    // Formatação simples para a comanda
+    let htmlItem = `<b>${it.name}</b>`;
+    // Se quiser listar os adicionais detalhados aqui, precisaria processar a string,
+    // mas como já vem "Nome (Add1, Add2)" do front, imprime direto.
+    
+    if(it.obs) htmlItem += `<br><small>(Obs: ${it.obs})</small>`;
+    
+    li.innerHTML = `<div style="display:flex; justify-content:space-between;">
+        <span>${htmlItem}</span>
+        <span>${brl(it.price)}</span>
+    </div>`;
     lista.appendChild(li);
   });
 
   total.innerHTML = `
-    Subtotal: ${brl(pedido.subtotal)}<br>
-    Entrega: ${brl(pedido.taxa)}<br>
-    <span style="border-top: 1px dashed #000; display: block; padding-top: 2mm; margin-top: 2mm; font-weight: bold;">
-      TOTAL: ${brl(pedido.total)}
-    </span>
+    <small>Sub: ${brl(pedido.subtotal)} | Ent: ${brl(pedido.taxa)}</small><br>
+    TOTAL: ${brl(pedido.total)}
   `;
 
-  const eRetirada = pedido.endereco === "Retirada no local";
-  tipo.textContent = eRetirada ? "*** RETIRADA ***" : "*** ENTREGA ***";
+  tipo.textContent = pedido.endereco === "Retirada no local" ? "RETIRADA" : "ENTREGA";
   cliente.textContent = `Cliente: ${pedido.nomeCliente}`;
   endereco.textContent = pedido.endereco;
-  pagamento.textContent = `Pagamento: ${pedido.pagamento}`;
-  obsPagamento.textContent = pedido.obsPagamento || "";
+  pagamento.textContent = `Pag: ${pedido.pagamento}`;
+  obsPagamento.textContent = pedido.obsPagamento ? `Troco: ${pedido.obsPagamento}` : "";
 
-  // Tenta imprimir automaticamente
-  setTimeout(() => {
-      try {
-        window.print();
-      } catch (e) {
-        console.error("Erro ao tentar imprimir:", e);
-      }
-  }, 500);
+  // Abre a janela de impressão
+  setTimeout(() => { window.print(); }, 300);
 }
 
-// ==========================================================
-// 5. FUNÇÕES DE RENDERIZAÇÃO DA TELA (KANBAN)
-// ==========================================================
+// 5. RENDERIZAÇÃO
 function atualizarTela() {
   const container = document.getElementById("lista-pedidos-container");
   if (!container) return;
 
   let filtrados = [];
-  switch (filtroAtual) {
-    case "NOVOS":
-      filtrados = todosPedidosDoDia.filter(p => p.status === "pendente");
-      break;
-    case "EM_PREPARO":
-      filtrados = todosPedidosDoDia.filter(p => p.status === "em_preparo");
-      break;
-    case "FINALIZADO":
-      filtrados = todosPedidosDoDia.filter(p => p.status === "finalizado");
-      break;
-    case "TUDO":
-      filtrados = [...todosPedidosDoDia];
-      break;
-  }
+  if (filtroAtual === "NOVOS") filtrados = todosPedidosDoDia.filter(p => p.status === "pendente");
+  else if (filtroAtual === "EM_PREPARO") filtrados = todosPedidosDoDia.filter(p => p.status === "em_preparo");
+  else if (filtroAtual === "FINALIZADO") filtrados = todosPedidosDoDia.filter(p => p.status === "finalizado");
 
-  // Ordena: mais recentes primeiro
   filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
 
   if (filtrados.length === 0) {
@@ -143,159 +110,91 @@ function atualizarTela() {
     return;
   }
 
-  let html = "";
-  filtrados.forEach(pedido => {
-    // Usa card grande para NOVOS/TUDO, compacto para os outros
-    if (filtroAtual === "NOVOS" || filtroAtual === "TUDO") {
-      html += gerarCardGrande(pedido);
-    } else {
-      html += gerarCardCompacto(pedido);
-    }
-  });
-  container.innerHTML = html;
+  container.innerHTML = filtrados.map(p => gerarCard(p)).join("");
 }
 
-function gerarCardGrande(pedido) {
-  let itensHtml = pedido.itens.map(it => {
-      let obs = it.obs ? ` <i>(${it.obs})</i>` : "";
-      return `<li><b>${it.name}</b>${obs}</li>`;
-  }).join("");
-
-  let statusClass = "";
-  let titulo = "";
+function gerarCard(p) {
+  let statusClass = p.status === 'pendente' ? 'status-pendente' : (p.status === 'em_preparo' ? 'status-em_preparo' : 'status-finalizado');
+  let itensHtml = p.itens.map(i => `<li>${i.name} ${i.obs ? `<small>(${i.obs})</small>` : ''}</li>`).join("");
+  
   let botoes = "";
-
-  switch(pedido.status) {
-      case 'pendente':
-          statusClass = 'status-pendente'; titulo = '🔥 NOVO PEDIDO';
-          botoes = `<button class="btn-acao btn-aceitar" data-codigo="${pedido.codigo}">✅ Aceitar</button>
-                    <button class="btn-acao btn-imprimir" data-codigo="${pedido.codigo}">🖨️ Imprimir</button>`;
-          break;
-      case 'em_preparo':
-          statusClass = 'status-em_preparo'; titulo = 'EM PREPARO';
-          botoes = `<button class="btn-acao btn-finalizar" data-codigo="${pedido.codigo}">🏁 Finalizar</button>
-                    <button class="btn-acao btn-imprimir" data-codigo="${pedido.codigo}">🖨️ Imprimir</button>`;
-          break;
-      case 'finalizado':
-          statusClass = 'status-finalizado'; titulo = 'FINALIZADO';
-          botoes = `<button class="btn-acao btn-imprimir" data-codigo="${pedido.codigo}">🖨️ Re-imprimir</button>`;
-          break;
+  if (p.status === 'pendente') {
+      botoes = `<button class="btn-acao btn-aceitar" data-codigo="${p.codigo}">✅ Aceitar</button>`;
+  } else if (p.status === 'em_preparo') {
+      botoes = `<button class="btn-acao btn-finalizar" data-codigo="${p.codigo}">🏁 Finalizar</button>`;
   }
+  
+  botoes += `<button class="btn-acao btn-imprimir" data-codigo="${p.codigo}">🖨️</button>`;
 
   return `
-    <div class="pedido-card" data-status="${pedido.status}">
-       <h3 class="${statusClass}">${titulo} #${pedido.codigo}</h3>
-       <p class="info">
-         <b>Cliente:</b> ${pedido.nomeCliente}<br>
-         <b>Horário:</b> ${formatarHora(pedido.data)}<br>
-         <b>Endereço:</b> ${pedido.endereco}<br>
-         <b>Pagamento:</b> ${pedido.pagamento} ${pedido.obsPagamento ? `(${pedido.obsPagamento})` : ''}
-       </p>
+    <div class="pedido-card" data-status="${p.status}">
+       <h3 class="${statusClass}">#${p.codigo} - ${p.nomeCliente}</h3>
+       <p class="info">${formatarHora(p.data)} | ${p.pagamento}</p>
+       <p class="info"><b>${p.endereco}</b></p>
        <ul>${itensHtml}</ul>
-       <h3 class="total">Total: ${brl(pedido.total)}</h3>
+       <h3 class="total">Total: ${brl(p.total)}</h3>
        <div class="botoes-acao">${botoes}</div>
     </div>
   `;
 }
 
-function gerarCardCompacto(pedido) {
-  let statusClass = pedido.status === 'em_preparo' ? 'status-em_preparo' : 'status-finalizado';
-  let titulo = pedido.status === 'em_preparo' ? 'EM PREPARO' : 'FINALIZADO';
-  let botaoPrincipal = pedido.status === 'em_preparo' 
-      ? `<button class="btn-acao btn-finalizar" data-codigo="${pedido.codigo}">🏁 Finalizar</button>`
-      : ``;
-
-  return `
-    <div class="pedido-card compact" data-status="${pedido.status}">
-      <div class="compact-info">
-        <h3 class="${statusClass}">${titulo} #${pedido.codigo}</h3>
-        <p class="info">${formatarHora(pedido.data)} | ${pedido.nomeCliente} | ${brl(pedido.total)}</p>
-      </div>
-      <div class="compact-botoes">
-        ${botaoPrincipal}
-        <button class="btn-acao btn-imprimir" data-codigo="${pedido.codigo}">🖨️</button>
-      </div>
-    </div>
-  `;
-}
-
-// ==========================================================
-// 6. INICIALIZAÇÃO E LISTENERS
-// ==========================================================
+// 6. INICIALIZAÇÃO
 document.addEventListener("DOMContentLoaded", () => {
   const statusDiv = document.getElementById("status-conexao");
 
-  // 6.1. Conecta no Pusher
+  // PUSHER
   try {
     const pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
     const channel = pusher.subscribe("canal-pedidos");
 
     channel.bind("novo-pedido", (data) => {
       if (data && data.pedido) {
-        console.log("🔔 Novo pedido recebido:", data.pedido);
-        // Adiciona no topo da lista
         todosPedidosDoDia.unshift(data.pedido);
-        
-        // Toca som e atualiza tela
         iniciarAlarme();
         atualizarTela();
-
-        // Imprime automaticamente
-        imprimirComanda(data.pedido);
+        // Auto-impressão ao chegar (opcional, se quiser desativar comente a linha abaixo)
+        imprimirComanda(data.pedido); 
       }
     });
-
-    statusDiv.textContent = "Conectado! Aguardando pedidos...";
+    statusDiv.textContent = "Conectado! Loja Aberta.";
     statusDiv.className = "status-conectado";
-
   } catch (e) {
-    console.error("Erro no Pusher:", e);
     statusDiv.textContent = "Erro de conexão.";
     statusDiv.className = "status-erro";
   }
 
-  // 6.2. Listener de Cliques (Navegação)
+  // NAVEGAÇÃO
   document.querySelectorAll(".painel-nav button").forEach(btn => {
     btn.addEventListener("click", () => {
-      // Remove ativo de todos
       document.querySelectorAll(".painel-nav button").forEach(b => b.classList.remove("active"));
-      // Adiciona ativo no clicado
       btn.classList.add("active");
-      // Atualiza filtro e tela
       filtroAtual = btn.dataset.filtro;
       atualizarTela();
     });
   });
 
-  // 6.3. Listener de Ações (Botões dos Cards)
-  const container = document.getElementById("lista-pedidos-container");
-  if (container) {
-    container.addEventListener("click", (e) => {
-      const btn = e.target.closest(".btn-acao");
-      if (!btn) return;
-      
-      const codigo = btn.dataset.codigo;
-      const pedidoIndex = todosPedidosDoDia.findIndex(p => p.codigo === codigo);
-      if (pedidoIndex === -1) return;
+  // AÇÕES DOS BOTÕES
+  document.getElementById("lista-pedidos-container").addEventListener("click", (e) => {
+    const btn = e.target.closest(".btn-acao");
+    if (!btn) return;
+    const codigo = btn.dataset.codigo;
+    const index = todosPedidosDoDia.findIndex(p => p.codigo === codigo);
+    if (index === -1) return;
 
-      if (btn.classList.contains("btn-aceitar")) {
-        pararAlarme();
-        todosPedidosDoDia[pedidoIndex].status = "em_preparo";
-        atualizarTela();
-      } 
-      else if (btn.classList.contains("btn-finalizar")) {
-        todosPedidosDoDia[pedidoIndex].status = "finalizado";
-        atualizarTela();
-      } 
-      else if (btn.classList.contains("btn-imprimir")) {
-        imprimirComanda(todosPedidosDoDia[pedidoIndex]);
-      }
-    });
-  }
+    if (btn.classList.contains("btn-aceitar")) {
+      pararAlarme();
+      todosPedidosDoDia[index].status = "em_preparo";
+      atualizarTela();
+    } else if (btn.classList.contains("btn-finalizar")) {
+      todosPedidosDoDia[index].status = "finalizado";
+      atualizarTela();
+    } else if (btn.classList.contains("btn-imprimir")) {
+      imprimirComanda(todosPedidosDoDia[index]);
+    }
+  });
 
-  // 6.4. Interação com a página para liberar áudio
+  // LIBERAR ÁUDIO (Clique em qualquer lugar para permitir som)
   document.body.addEventListener("click", () => {
-    // Apenas um clique qualquer na página já libera o áudio
     if (audioAlarme.context && audioAlarme.context.state === 'suspended') {
         audioAlarme.context.resume();
     }

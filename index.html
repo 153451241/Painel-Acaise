@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Pedidos - Novo Cliente</title> <link rel="stylesheet" href="style.css">
+  <title>Painel Açaíse - Pedidos</title> 
+  <link rel="stylesheet" href="style.css">
+  <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
   
   <style>
     /* Estilos do painel */
@@ -21,9 +23,10 @@
     .aba-container { padding: 10px 20px 20px; height: 70vh; overflow-y: auto; }
     
     .pedido-card { background: #fff; border: 2px solid #ccc; padding: 15px; margin-top: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .pedido-card[data-status="pendente"] { border-color: #dc3545; }
-    .pedido-card[data-status="em_preparo"] { border-color: #ffc107; }
-    .pedido-card[data-status="finalizado"] { border-color: #28a745; opacity: 0.8; }
+    .pedido-card[data-status="pendente"] { border-color: #dc3545; border-left: 10px solid #dc3545; }
+    .pedido-card[data-status="em_preparo"] { border-color: #ffc107; border-left: 10px solid #ffc107; }
+    .pedido-card[data-status="finalizado"] { border-color: #28a745; opacity: 0.8; border-left: 10px solid #28a745; }
+    
     .pedido-card h3 { margin-top: 0; font-size: 1.1em; text-align: left; }
     .pedido-card h3.status-pendente { color: #dc3545; }
     .pedido-card h3.status-em_preparo { color: #cc9a00; }
@@ -35,7 +38,7 @@
     .btn-acao { flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.2s ease; }
     .btn-aceitar { background-color: #28a745; color: white; }
     .btn-finalizar { background-color: #007bff; color: white; }
-    .btn-imprimir { background-color: #777; color: white; }
+    .btn-imprimir { background-color: #6c757d; color: white; }
     .placeholder { text-align: center; color: #999; margin-top: 50px; font-style: italic; }
   </style>
   
@@ -43,7 +46,8 @@
 <body>
 
   <div class="painel-container">
-    <h1>Painel de Pedidos (Novo Cliente)</h1> <div id="status-conexao">Conectando à campainha...</div>
+    <h1>Painel Açaíse (Zona Norte)</h1> 
+    <div id="status-conexao">Conectando...</div>
     
     <nav class="painel-nav">
       <button class="filtro-btn active" data-filtro="NOVOS">Novos</button>
@@ -52,30 +56,36 @@
     </nav>
     
     <div id="lista-pedidos-container" class="aba-container">
-      <p class="placeholder">Aguardando novos pedidos...</p>
+      <p class="placeholder">Aguardando pedidos...</p>
     </div>
 
   </div>
 
   <div id="comanda-impressao" style="display: none;">
-    <h3 id="comanda-loja">Nome da Loja</h3>
-    <p id="comanda-tipo"></p>
-    <ul id="comanda-lista"></ul>
-    <div id="comanda-total"></div>
-    <div class="comanda-info">
+    <h3 id="comanda-loja" style="text-align:center; border-bottom:1px dashed #000; padding-bottom:5px;">AÇAÍSE</h3>
+    <p id="comanda-tipo" style="text-align:center; font-weight:bold; margin:5px 0;"></p>
+    
+    <div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div>
+    
+    <ul id="comanda-lista" style="list-style:none; padding:0; margin:0;"></ul>
+    
+    <div style="border-top:1px dashed #000; margin-top:5px; padding-top:5px;"></div>
+    
+    <div id="comanda-total" style="text-align:right; font-weight:bold; font-size:1.2em;"></div>
+    
+    <div class="comanda-info" style="margin-top:10px; font-size:0.9em;">
       <strong id="comanda-cliente"></strong><br>
       <span id="comanda-endereco"></span><br>
       <span id="comanda-pagamento"></span><br>
       <span id="comanda-obs-pagamento"></span>
     </div>
     <p style="text-align: center; font-size: 10px; margin-top: 15px;">
-      Pedido via Cardápio Digital
+      Pedido via Açaíse Digital
     </p>
   </div>
   
   <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
-  
-  <script src="painel.js" type="module"></script>
+  <script src="painel.js"></script>
 
 </body>
 </html>
