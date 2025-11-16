@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Pedidos - Novo Cliente</title> <link rel="stylesheet" href="style.css">
+  
+  <style>
+    /* Estilos do painel */
+    body { background: #f0f0f0 !important; color: #333; font-family: system-ui, -apple-system, sans-serif; }
+    body::before { background: none !important; display: none !important; }
+    .painel-container { max-width: 900px; margin: 20px auto; padding: 0; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; }
+    h1 { text-align: center; color: #4a0072; margin: 15px 0; }
+    #status-conexao { text-align: center; padding: 10px; border-radius: 5px; font-weight: bold; color: white; margin: 15px; }
+    .status-conectado { background-color: #28a745; }
+    .status-erro { background-color: #dc3545; }
+    .painel-nav { display: flex; background-color: #f4f4f4; border-bottom: 1px solid #ddd; }
+    .painel-nav button { flex: 1; padding: 15px 10px; border: none; background: transparent; font-size: 1em; font-weight: 600; color: #777; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s ease; }
+    .painel-nav button:hover { background-color: #eee; }
+    .painel-nav button.active { color: #4a0072; border-bottom-color: #4a0072; }
+    .aba-container { padding: 10px 20px 20px; height: 70vh; overflow-y: auto; }
+    
+    .pedido-card { background: #fff; border: 2px solid #ccc; padding: 15px; margin-top: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .pedido-card[data-status="pendente"] { border-color: #dc3545; }
+    .pedido-card[data-status="em_preparo"] { border-color: #ffc107; }
+    .pedido-card[data-status="finalizado"] { border-color: #28a745; opacity: 0.8; }
+    .pedido-card h3 { margin-top: 0; font-size: 1.1em; text-align: left; }
+    .pedido-card h3.status-pendente { color: #dc3545; }
+    .pedido-card h3.status-em_preparo { color: #cc9a00; }
+    .pedido-card h3.status-finalizado { color: #28a745; }
+    .pedido-card ul { padding-left: 20px; font-size: 0.95em; }
+    .pedido-card .info { font-size: 0.9em; color: #555; }
+    .pedido-card .total { text-align: right; margin: 10px 0 0; font-weight: bold; font-size: 1.1em; color: #333; }
+    .botoes-acao { margin-top: 15px; display: flex; gap: 10px; }
+    .btn-acao { flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.2s ease; }
+    .btn-aceitar { background-color: #28a745; color: white; }
+    .btn-finalizar { background-color: #007bff; color: white; }
+    .btn-imprimir { background-color: #777; color: white; }
+    .placeholder { text-align: center; color: #999; margin-top: 50px; font-style: italic; }
+  </style>
+  
+</head>
+<body>
+
+  <div class="painel-container">
+    <h1>Painel de Pedidos (Novo Cliente)</h1> <div id="status-conexao">Conectando à campainha...</div>
+    
+    <nav class="painel-nav">
+      <button class="filtro-btn active" data-filtro="NOVOS">Novos</button>
+      <button class="filtro-btn" data-filtro="EM_PREPARO">Em Preparo</button>
+      <button class="filtro-btn" data-filtro="FINALIZADO">Finalizados</button>
+    </nav>
+    
+    <div id="lista-pedidos-container" class="aba-container">
+      <p class="placeholder">Aguardando novos pedidos...</p>
+    </div>
+
+  </div>
+
+  <div id="comanda-impressao" style="display: none;">
+    <h3 id="comanda-loja">Nome da Loja</h3>
+    <p id="comanda-tipo"></p>
+    <ul id="comanda-lista"></ul>
+    <div id="comanda-total"></div>
+    <div class="comanda-info">
+      <strong id="comanda-cliente"></strong><br>
+      <span id="comanda-endereco"></span><br>
+      <span id="comanda-pagamento"></span><br>
+      <span id="comanda-obs-pagamento"></span>
+    </div>
+    <p style="text-align: center; font-size: 10px; margin-top: 15px;">
+      Pedido via Cardápio Digital
+    </p>
+  </div>
+  
+  <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+  
+  <script src="painel.js" type="module"></script>
+
+</body>
+</html>
