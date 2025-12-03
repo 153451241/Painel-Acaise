@@ -1,5 +1,5 @@
 /* =========================================================
-   STYLE.CSS (VERSÃO LIMPA PARA O PAINEL)
+   STYLE.CSS (VERSÃO LIMPA PARA O PAINEL) - CORREÇÃO DE IMPRESSÃO
    ========================================================= */
 
 /* --- Fontes e Reset Básico --- */
@@ -91,30 +91,58 @@ body {
     padding: 0;
     margin: 0;
   }
+  
+  /* Mantém o li como bloco, removendo o display:flex que estava em conflito */
   #comanda-impressao li {
-    display: flex;
-    justify-content: space-between;
+    list-style: none;
+    padding: 1mm 0;
+    margin: 0;
+    
+    display: block; 
     font-size: 9pt;
     line-height: 1.4;
     border-bottom: 1px dotted #ccc;
-    padding: 1mm 0;
     word-break: break-word;
   }
-  #comanda-impressao li b {
-    max-width: 80%;
-  }
-  #comanda-impressao li i {
-    font-size: 8pt;
-    display: block;
+  
+  /* NOVO: Aplica o Flex no DIV interno para separar nome/preço */
+  #comanda-impressao li > div {
+    display: flex;
+    justify-content: space-between;
     width: 100%;
-    margin-top: 0.5mm;
-    color: #333;
   }
-  #comanda-impressao li span {
-    white-space: nowrap;
-    text-align: right;
-    margin-left: 5mm;
+
+  /* CORREÇÃO CRÍTICA: Permite que o nome do item e os adicionais quebrem */
+  /* Target: Primeiro span, que contém o nome e adicionais */
+  #comanda-impressao li > div > span:first-child {
+      white-space: normal !important; /* PERMITE A QUEBRA DE LINHA */
+      word-break: break-word !important; 
+      max-width: 80%; /* Garante espaço para o preço */
+      text-align: left;
   }
+  
+  /* Target: Segundo span, que contém o preço */
+  #comanda-impressao li > div > span:last-child {
+      white-space: nowrap !important; /* IMPEDE A QUEBRA NO PREÇO */
+      text-align: right;
+      margin-left: 5mm;
+  }
+
+  /* Mantém o estilo para o negrito (nome do item) */
+  #comanda-impressao li b {
+    max-width: 100%; 
+  }
+  
+  /* Estilo para a observação (se houver, que é um <small> dentro do <li>, veja painel.js) */
+  #comanda-impressao li small {
+    display: block; /* Faz a observação ficar em sua própria linha */
+    font-size: 8pt;
+    color: #555;
+    margin-top: 2px;
+  }
+
+  /* Regra antiga removida: #comanda-impressao li i */
+  
   #comanda-impressao .comanda-total {
     font-size: 11pt;
     font-weight: bold;
